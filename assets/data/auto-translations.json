@@ -1,0 +1,79 @@
+{
+    "pending_translations": {
+        "teams": [],
+        "players": [],
+        "countries": {
+            "jordan": {
+                "original": "Jordan",
+                "added": "2025-08-25T20:39:53+00:00",
+                "translated": false
+            },
+            "poland": {
+                "original": "Poland",
+                "added": "2025-08-25T20:39:53+00:00",
+                "translated": false
+            },
+            "world": {
+                "original": "World",
+                "added": "2025-08-25T20:39:54+00:00",
+                "translated": false
+            },
+            "uruguay": {
+                "original": "Uruguay",
+                "added": "2025-08-25T20:39:54+00:00",
+                "translated": false
+            },
+            "ukraine": {
+                "original": "Ukraine",
+                "added": "2025-08-25T20:39:55+00:00",
+                "translated": false
+            },
+            "armenia": {
+                "original": "Armenia",
+                "added": "2025-08-25T20:39:55+00:00",
+                "translated": false
+            },
+            "oman": {
+                "original": "Oman",
+                "added": "2025-08-25T20:39:55+00:00",
+                "translated": false
+            },
+            "hungary": {
+                "original": "Hungary",
+                "added": "2025-08-25T20:39:55+00:00",
+                "translated": false
+            },
+            "germany": {
+                "original": "Germany",
+                "added": "2025-08-25T20:40:47+00:00",
+                "translated": false
+            },
+            "spain": {
+                "original": "Spain",
+                "added": "2025-08-25T20:42:52+00:00",
+                "translated": false
+            },
+            "argentina": {
+                "original": "Argentina",
+                "added": "2025-08-25T20:44:51+00:00",
+                "translated": false
+            },
+            "england": {
+                "original": "England",
+                "added": "2025-08-25T20:45:24+00:00",
+                "translated": false
+            },
+            "italy": {
+                "original": "Italy",
+                "added": "2025-08-25T20:56:04+00:00",
+                "translated": false
+            }
+        }
+    },
+    "metadata": {
+        "created": "2025-08-25T20:39:53+00:00",
+        "description": "کلمات دریافتی که نیاز به ترجمه دستی دارند",
+        "total_pending": 13,
+        "last_updated": "2025-08-25T20:56:04+00:00"
+    }
+}
