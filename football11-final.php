@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: Football11 – Final (Direct API Integration)
- * Description: یک شورت‌کد واحد [football11] که کل صفحهٔ سه‌ستونه را می‌سازد با استفاده مستقیم از API-Football
- * Version: 2.0.0
+ * Plugin Name: بت لحظه – نمایش نتایج زنده و پیش‌بینی
+ * Description: نمایش نتایج زنده فوتبال و اطلاعات پیش‌بینی با استفاده از API-Football
+ * Version: 2.1.0
  * Author: You
  * License: GPLv2 or later
  */
@@ -15,14 +15,14 @@ class Football11_Final_Plugin {
   function __construct(){
     add_action('admin_menu', [$this,'menu']);
     add_action('admin_init', [$this,'register']);
-    add_shortcode('football11', [$this,'shortcode']);
+    add_shortcode('betlahze', [$this,'shortcode']);
     add_action('wp_enqueue_scripts', [$this,'assets']);
     add_action('admin_enqueue_scripts', [$this,'adminAssets']);
     add_filter('plugin_action_links_' . plugin_basename(__FILE__), [$this,'links']);
   }
 
   /* Admin */
-  function menu(){ add_options_page('Football11 Final','Football11 Final','manage_options','f11-final',[$this,'settings']); }
+  function menu(){ add_options_page('بت لحظه','بت لحظه','manage_options','f11-final',[$this,'settings']); }
   function register(){ register_setting('f11_final_group', self::OPT, ['sanitize_callback'=>[$this,'sanitize_opts']]); }
   function links($links){ $url = admin_url('options-general.php?page=f11-final'); $links[] = '<a href="'.$url.'">Settings</a>'; return $links; }
 
@@ -50,7 +50,7 @@ class Football11_Final_Plugin {
     $ttlO = max(0, intval($o['ttl_other'] ?? 0));
     ?>
     <div class="wrap">
-      <h1>Football11 – Final Settings (Direct API)</h1>
+      <h1>تنظیمات افزونه بت لحظه (اتصال مستقیم به API)</h1>
       <?php if(isset($_GET['settings-updated'])) echo '<div class="updated notice"><p>Settings saved.</p></div>'; ?>
       
       <!-- API-Football Info Box -->
@@ -110,7 +110,7 @@ class Football11_Final_Plugin {
       </form>
       
       <hr>
-      <p>Shortcode: <code>[football11 season="2025"]</code> یا <code>[football11 league="39" season="2025"]</code></p>
+      <p>Shortcode: <code>[betlahze season="2025"]</code> یا <code>[betlahze league="39" season="2025"]</code></p>
     </div>
     <?php
   }
@@ -161,7 +161,7 @@ class Football11_Final_Plugin {
       'league'   => '',
       'season'   => '',
       'timezone' => '',
-    ], $atts, 'football11');
+    ], $atts, 'betlahze');
 
     $o = get_option(self::OPT, []);
     $cfg = [
@@ -177,8 +177,8 @@ class Football11_Final_Plugin {
         <div class="brand-row">
           <div class="pull-right">
             <a href="#" class="brand-name">
-              <h1>فوتبال 11</h1>
-              <h2>نتایج زنده فوتبال </h2>
+              <h1>بت لحظه</h1>
+              <h2>پیش‌بینی و نتایج زنده</h2>
             </a>
           </div>
           <div class="pull-left">
