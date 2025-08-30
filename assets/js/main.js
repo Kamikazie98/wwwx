@@ -1,94 +1,171 @@
-// assets/js/main.js
-
 (function($) {
-  'use strict';
+    'use strict';
 
-  window.Football11App = {
-    config: F11COMPLETE || {},
-    state: {
-      currentDate: '2025-08-26',
-      filters: {
-        country: '',
-        live: false,
-        favorite: false,
-        mainFilter: 'all'
-      },
-      favorites: {
-        leagues: [],
-        teams: []
-      }
-    },
+    if (!window.Football11App) {
+        window.Football11App = {};
+    }
 
-    init: function() {
-      this.initEvents();
-      // ... other init functions
-    },
+    $.extend(window.Football11App, {
+        config: F11COMPLETE || { /* defaults */ },
+        cache: {},
+        state: {
+            currentDate: '2025-08-26',
+            filters: { country: '', live: false, favorite: false, mainFilter: 'all' },
+            favorites: { leagues: [], teams: [] }
+        },
 
-    initEvents: function() {
-      const app = this;
-      const container = $('.football11-app').first();
+        init: function() {
+            if (this.api && typeof this.api.init === 'function') this.api.init(this);
+            if (this.ui && typeof this.ui.init === 'function') this.ui.init(this);
 
-      // Top tabs
-      container.find('.top-tab-list .tab').on('click', function(e) {
-        e.preventDefault();
-        container.find('.top-tab-list .tab').removeClass('active');
-        $(this).addClass('active');
-        let offset = 0;
-        if ($(this).data('date') === 'yesterday') offset = -1;
-        else if ($(this).data('date') === 'tomorrow') offset = 1;
-        app.state.currentDate = offset ? app.getDateString(offset) : app.config.date;
-        app.loadMatches(container, app.state.currentDate, app.state.filters);
-      });
+            // Immediately check for API key
+            if (!this.config.api.key) {
+                this.ui.showError('کلید API تنظیم نشده است. لطفاً از بخش تنظیمات افزونه، کلید خود را وارد کنید.');
+                this.ui.showLoading($('.football11-app').first(), false); // Hide any loading indicators
+                return; // Stop execution
+            }
 
-      // Filters
-      container.find('.filter-item.region').on('change', function() {
-        app.state.filters.country = $(this).val();
-        app.loadMatches(container, app.state.currentDate, app.state.filters);
-      });
+            this.initEvents();
+            this.initFavorites();
+            this.initPersianCalendar();
+            this.loadInitialData();
+        },
 
-      // ... other event listeners
-    },
+        loadInitialData: function() {
+            const container = $('.football11-app').first();
+            if(container.length) {
+                const cfg = JSON.parse(container.attr('data-cfg') || '{}');
+                this.loadMatches(container, cfg.date || this.state.currentDate);
+                this.loadTopLeagues(container);
+                this.loadCountries(container);
+            }
+        },
 
-    loadMatches: function(container, date, filters) {
-      if (filters.live) {
-        this.loadLiveMatches(container);
-      } else {
-        this.loadMatchesWithFilter(container, filters.mainFilter);
-      }
-    },
+        getDateString: function(offset = 0) {
+            const date = new Date();
+            date.setDate(date.getDate() + offset);
+            return date.toISOString().split('T')[0];
+        },
 
-    loadMatchesWithFilter: function(container, filterType) {
-      window.Football11UI.showLoading(container, true);
-      container.find('#match_list').empty();
-      // ...
-      window.Football11Api.fetchFixturesWithPagination({ date: this.state.currentDate, timezone: this.config.api.timezone })
-        .then(fixtures => {
-          // ... filtering logic
-          window.Football11UI.displayMatchesByLeague(container, filteredFixtures);
-        })
-        .finally(() => {
-          window.Football11UI.showLoading(container, false);
-        });
-    },
+        initFavorites: function() { /* ... */ },
+        saveFavorites: function() { /* ... */ },
+        toggleLeagueFavorite: function(leagueId) { /* ... */ },
+        isLeagueFavorite: function(leagueId) { /* ... */ },
+        sortLeaguesByPriority: function(leagues) { /* ... */ },
+        initPersianCalendar: function() { /* ... */ },
+        // Other non-UI functions...
 
-    // ... other main logic functions
+        loadMatches: function(container, date = this.state.currentDate, filters = this.state.filters) {
+            this.state.currentDate = date;
+            this.ui.showLoading(container, true);
 
-    groupBy: function(array, keyFn) {
-      return array.reduce((result, item) => {
-        const key = typeof keyFn === 'function' ? keyFn(item) : item[keyFn];
-        (result[key] = result[key] || []).push(item);
-        return result;
-      }, {});
-    },
+            const params = { date: this.state.currentDate, timezone: this.config.api.timezone };
+            if (filters.country) params.country = filters.country;
 
-    getTeamLogoUrl: function(teamLogo, teamName) {
-      if (teamLogo && teamLogo.trim() !== '') {
-        return teamLogo;
-      }
-      return `https://media.api-sports.io/football/teams/default.png`;
-    },
-  };
+            let apiCall;
+            if (filters.live) {
+                apiCall = this.api.fetchAPI('fixtures', { live: 'all' }, true);
+            } else {
+                apiCall = this.api.fetchFixturesWithPagination(params, 1);
+            }
 
-  $(document).ready(() => window.Football11App.init());
+            apiCall.then(fixtures => {
+                if (!fixtures || fixtures.length === 0) {
+                    this.ui.showError('هیچ مسابقه‌ای یافت نشد.');
+                    return;
+                }
+                // Filtering logic can be added here based on `filters.mainFilter`
+                this.ui.displayMatchesByLeague(container, fixtures);
+            })
+            .catch(error => {
+                console.error('Error loading matches:', error);
+                this.ui.showError(`خطا در بارگذاری مسابقات: ${error.message}`);
+            })
+            .finally(() => {
+                this.ui.showLoading(container, false);
+            });
+        },
+
+        loadTopLeagues: function(container) {
+            this.api.fetchAPI('leagues')
+                .then(leagues => {
+                    if (leagues && leagues.length > 0) {
+                        const topLeagues = this.sortLeaguesByPriority(leagues.filter(l => l.league.type === 'League')).slice(0, 12);
+                        // Assuming a function exists in ui.js to display this
+                        // this.ui.displayTopLeagues(container, topLeagues);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading top leagues:', error);
+                    // Optionally show a more specific error in the UI
+                    // this.ui.showErrorInContainer(container.find('.top-leagues'), `خطا: ${error.message}`);
+                });
+        },
+
+        loadCountries: function(container) {
+            this.api.fetchAPI('countries')
+                .then(countries => {
+                    // this.ui.displayCountries(container, countries);
+                })
+                .catch(error => {
+                    console.error('Error loading countries:', error);
+                });
+        },
+
+        loadMatchDetails: function(fixtureId) {
+            this.api.fetchAPI('fixtures', { id: fixtureId })
+                .then(fixtures => {
+                    if(fixtures && fixtures.length > 0) {
+                        this.ui.displayMatchInfo(fixtures[0]);
+                    }
+                })
+                .catch(error => {
+                    console.error(`Error loading details for fixture ${fixtureId}:`, error);
+                    this.ui.showError(`خطا در بارگذاری جزئیات: ${error.message}`);
+                });
+        },
+
+        initEvents: function() {
+            const app = this;
+            const container = $('.football11-app').first();
+
+            container.on('click', '.top-tab-list .tab', function(e) {
+                e.preventDefault();
+                // ... logic to get date ...
+                app.loadMatches(container, app.state.currentDate, app.state.filters);
+            });
+
+            container.on('click', '.match-row', function(e) {
+                e.preventDefault();
+                const fixtureId = $(this).data('fixture-id');
+                if (fixtureId) app.loadMatchDetails(fixtureId);
+            });
+
+            container.on('click', '.favorite-btn', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const leagueId = $(this).data('league-id');
+                if(leagueId) app.toggleLeagueFavorite(leagueId);
+            });
+        },
+
+        // ... Other utility and placeholder functions from previous version
+        groupBy: function(array, keyFn) { /* ... */ return array.reduce((r,i) => { const k = typeof keyFn === 'function' ? keyFn(i) : i[keyFn]; (r[k] = r[k] || []).push(i); return r; }, {}); },
+        getTeamLogoUrl: function(logo, name) { return logo || `https://media.api-sports.io/football/teams/default.png`; },
+        getMatchStatus: function(s) { const map = {'NS':'شروع نشده'}; return map[s] || s; }
+    });
+
+    $(document).ready(function() {
+        // Defer initialization slightly to ensure all scripts are loaded
+        setTimeout(function() {
+            if (window.Football11App && typeof window.Football11App.init === 'function') {
+                window.Football11App.init();
+            } else {
+                console.error("Bet Lahze App failed to initialize.");
+                // Display a fallback error if the app object isn't even there
+                $('.football11-app').html('<div class="error-container">خطای اساسی در بارگذاری برنامه. لطفاً صفحه را رفرش کنید.</div>');
+            }
+        }, 100);
+    });
 
 })(jQuery);

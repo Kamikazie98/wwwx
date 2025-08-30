@@ -1,16 +1,16 @@
 <?php
 /**
- * Plugin Name: بت لحظه – نمایش نتایج زنده و پیش‌بینی
- * Description: نمایش نتایج زنده فوتبال و اطلاعات پیش‌بینی با استفاده از API-Football
- * Version: 2.1.0
- * Author: You
+ * Plugin Name: Bet Lahze - Live Scores
+ * Description: Provides a [betlahze] shortcode to display a three-column live score page using API-Football.
+ * Version: 3.0.0
+ * Author: Jules
  * License: GPLv2 or later
  */
 
 if (!defined('ABSPATH')) exit;
 
-class Football11_Final_Plugin {
-  const OPT = 'f11_final_opts';
+class Betlahze_Live_Scores_Plugin {
+  const OPT = 'betlahze_opts';
 
   function __construct(){
     add_action('admin_menu', [$this,'menu']);
@@ -22,9 +22,9 @@ class Football11_Final_Plugin {
   }
 
   /* Admin */
-  function menu(){ add_options_page('بت لحظه','بت لحظه','manage_options','f11-final',[$this,'settings']); }
-  function register(){ register_setting('f11_final_group', self::OPT, ['sanitize_callback'=>[$this,'sanitize_opts']]); }
-  function links($links){ $url = admin_url('options-general.php?page=f11-final'); $links[] = '<a href="'.$url.'">Settings</a>'; return $links; }
+  function menu(){ add_options_page('Bet Lahze Settings','Bet Lahze','manage_options','betlahze-settings',[$this,'settings']); }
+  function register(){ register_setting('betlahze_group', self::OPT, ['sanitize_callback'=>[$this,'sanitize_opts']]); }
+  function links($links){ $url = admin_url('options-general.php?page=betlahze-settings'); $links[] = '<a href="'.$url.'">Settings</a>'; return $links; }
 
   function sanitize_opts($in){
     $out = [];
@@ -50,12 +50,12 @@ class Football11_Final_Plugin {
     $ttlO = max(0, intval($o['ttl_other'] ?? 0));
     ?>
     <div class="wrap">
-      <h1>تنظیمات افزونه بت لحظه (اتصال مستقیم به API)</h1>
+      <h1>Bet Lahze - Live Scores Settings</h1>
       <?php if(isset($_GET['settings-updated'])) echo '<div class="updated notice"><p>Settings saved.</p></div>'; ?>
       
       <!-- API-Football Info Box -->
       <div style="background: #e7f3ff; border: 1px solid #0073aa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
-        <h3 style="margin-top: 0; color: #0073aa;">⚽ API-Football Direct Integration</h3>
+        <h3 style="margin-top: 0; color: #0073aa;">⚽ API-Football Integration</h3>
         <p style="margin-bottom: 15px;">
           این افزونه مستقیماً از <strong><a href="https://rapidapi.com/api-sports/api/api-football" target="_blank">API-Football</a></strong> استفاده می‌کند.
           <strong>نکته:</strong> API Key شما در JavaScript قابل مشاهده خواهد بود.
@@ -83,7 +83,7 @@ class Football11_Final_Plugin {
       </div>
       
       <form method="post" action="options.php">
-        <?php settings_fields('f11_final_group'); do_settings_sections('f11_final_group'); ?>
+        <?php settings_fields('betlahze_group'); do_settings_sections('betlahze_group'); ?>
         <table class="form-table" role="presentation">
           <tr><th scope="row"><label for="f11_key">x-rapidapi-key</label></th>
               <td><input id="f11_key" name="<?=self::OPT?>[key]" value="<?=$key?>" class="regular-text" required>
@@ -110,7 +110,7 @@ class Football11_Final_Plugin {
       </form>
       
       <hr>
-      <p>Shortcode: <code>[betlahze season="2025"]</code> یا <code>[betlahze league="39" season="2025"]</code></p>
+      <p>Shortcode: <code>[betlahze season="2025"]</code> or <code>[betlahze league="39" season="2025"]</code></p>
     </div>
     <?php
   }
@@ -120,12 +120,12 @@ class Football11_Final_Plugin {
     $ver = '3.0.0';
     $o = get_option(self::OPT, []);
     
-    wp_enqueue_style('football11-app', plugins_url('assets/css/app.css', __FILE__), [], $ver);
-    wp_enqueue_script('football11-main', plugins_url('assets/js/main.js', __FILE__), ['jquery'], $ver, true);
-    wp_enqueue_script('football11-api', plugins_url('assets/js/api.js', __FILE__), ['football11-main'], $ver, true);
-    wp_enqueue_script('football11-ui', plugins_url('assets/js/ui.js', __FILE__), ['football11-main'], $ver, true);
+    wp_enqueue_style('betlahze-app', plugins_url('assets/css/app.css', __FILE__), [], $ver);
+    wp_enqueue_script('betlahze-api', plugins_url('assets/js/api.js', __FILE__), ['jquery'], $ver, true);
+    wp_enqueue_script('betlahze-ui', plugins_url('assets/js/ui.js', __FILE__), ['jquery', 'betlahze-api'], $ver, true);
+    wp_enqueue_script('betlahze-main', plugins_url('assets/js/main.js', __FILE__), ['jquery', 'betlahze-ui'], $ver, true);
     
-    wp_localize_script('football11-main', 'F11COMPLETE', [
+    wp_localize_script('betlahze-main', 'F11COMPLETE', [
       'api' => [
         'key' => $o['key'] ?? '',
         'host' => $o['host'] ?? 'api-football-v1.p.rapidapi.com',
@@ -149,10 +149,10 @@ class Football11_Final_Plugin {
 
   /* Admin Assets */
   function adminAssets($hook) {
-    if ($hook !== 'settings_page_f11-final') return;
+    if ($hook !== 'settings_page_betlahze-settings') return;
     
-    $ver = '2.0.0';
-    wp_enqueue_script('football11-admin', plugins_url('assets/js/admin.js', __FILE__), ['jquery'], $ver, true);
+    $ver = '3.0.0';
+    wp_enqueue_script('betlahze-admin', plugins_url('assets/js/admin.js', __FILE__), ['jquery'], $ver, true);
   }
 
   /* Shortcode */
@@ -825,7 +825,7 @@ class Football11_Final_Plugin {
       <!-- Mobile Drawer -->
       <div class="drawer-container">
         <div class="topbar">
-          <span>فوتبــال 11</span>
+          <span>بت لحظه</span>
           <span class="close-button fa fa-times-thin"></span>
         </div>
         <div class="drawer-content">
@@ -867,23 +867,8 @@ class Football11_Final_Plugin {
     <div class="fixed-loading" style="display: none;">در حال بارگذاری...</div>
     <div class="body-overlay" style="display: none;"></div>
 
-    <script>
-      // Initialize the app when DOM is ready
-      jQuery(document).ready(function($) {
-        // Wait a bit for Football11App to be available
-        setTimeout(function() {
-          if (typeof window.Football11App !== 'undefined') {
-            console.log('✅ Football11App loaded, initializing...');
-            // Initialize the app - these functions will be called from initEvents
-            window.Football11App.init();
-          } else {
-            console.error('❌ Football11App not found');
-          }
-        }, 500);
-      });
-    </script>
     <?php return ob_get_clean();
   }
 }
 
-new Football11_Final_Plugin();
+new Betlahze_Live_Scores_Plugin();
