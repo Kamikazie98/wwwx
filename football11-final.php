@@ -120,12 +120,12 @@ class Football11_Final_Plugin {
     $ver = '3.0.0';
     $o = get_option(self::OPT, []);
     
-    wp_enqueue_style('football11-style', plugins_url('assets/css/style.css', __FILE__), [], $ver);
-    wp_enqueue_style('football11-app', plugins_url('assets/css/app.css', __FILE__), ['football11-style'], $ver);
-    wp_enqueue_style('football11-responsive', plugins_url('assets/css/responsive.css', __FILE__), ['football11-app'], $ver);
-    wp_enqueue_script('football11-script', plugins_url('assets/js/app.js', __FILE__), ['jquery'], $ver, true);
+    wp_enqueue_style('football11-app', plugins_url('assets/css/app.css', __FILE__), [], $ver);
+    wp_enqueue_script('football11-main', plugins_url('assets/js/main.js', __FILE__), ['jquery'], $ver, true);
+    wp_enqueue_script('football11-api', plugins_url('assets/js/api.js', __FILE__), ['football11-main'], $ver, true);
+    wp_enqueue_script('football11-ui', plugins_url('assets/js/ui.js', __FILE__), ['football11-main'], $ver, true);
     
-    wp_localize_script('football11-script', 'F11COMPLETE', [
+    wp_localize_script('football11-main', 'F11COMPLETE', [
       'api' => [
         'key' => $o['key'] ?? '',
         'host' => $o['host'] ?? 'api-football-v1.p.rapidapi.com',
